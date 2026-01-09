@@ -1,5 +1,6 @@
 // Temporary Storage for Todo Items
 let todos = [];
+let currentFilter = 'all';
 
 // Function to Add Todo Item
 function addTodo() {
@@ -14,7 +15,8 @@ function addTodo() {
     } else {
         const newTodo = {
             task: todoInput.value,
-            date: todoDate.value
+            date: todoDate.value,
+            done: false
         };
 
         // Add the new todo to the todos array
@@ -35,11 +37,32 @@ function renderTodos() {
     // Clear existing list
     todoList.innerHTML = '';
 
+    // Filter todos based on current filter
+    let filtered = todos;
+    if (currentFilter === 'pending') {
+        filtered = todos.filter(t => !t.done);
+    } else if (currentFilter === 'completed') {
+        filtered = todos.filter(t => t.done);
+    }
+
+    // Show message if no todos
+    if (filtered.length === 0) {
+        todoList.innerHTML = '<li>No todos available</li>';
+        return;
+    }
+
     // Render each todo item
-    todos.forEach((todo, _) => {
+    filtered.forEach((todo, idx) => {
+        const realIdx = todos.indexOf(todo);
+        const checked = todo.done ? 'checked' : '';
+        const textClass = todo.done ? 'line-through text-gray-400' : '';
+
         todoList.innerHTML += `
-        <li>
-            <p class="text-2xl">${todo.task} <span class="text-sm text-gray-500">(${todo.date})</span></p>
+        <li class="py-2">
+            <label class="flex items-center gap-2">
+                <input type="checkbox" ${checked} onchange="toggleTodo(${realIdx})" />
+                <span class="text-2xl ${textClass}">${todo.task} <span class="text-sm text-gray-500">(${todo.date})</span></span>
+            </label>
             <hr />
         </li>`;
     });
@@ -53,5 +76,29 @@ function removeAllTodo() {
     renderTodos();
 }
 
-// Function to Filter Todo Items
-function filterTodo() { }
+// Function to Toggle Filter
+function filterTodo() {
+    const filterBtn = document.getElementById('filter-btn');
+    
+    // Cycle through filter states
+    if (currentFilter === 'all') {
+        currentFilter = 'pending';
+        filterBtn.textContent = 'Filter: Pending';
+    } else if (currentFilter === 'pending') {
+        currentFilter = 'completed';
+        filterBtn.textContent = 'Filter: Completed';
+    } else {
+        currentFilter = 'all';
+        filterBtn.textContent = 'Filter Todos';
+    }
+    
+    renderTodos();
+}
+
+// Function to Toggle Todo Done Status
+function toggleTodo(index) {
+    if (todos[index]) {
+        todos[index].done = !todos[index].done;
+        renderTodos();
+    }
+}
